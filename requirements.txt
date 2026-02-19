@@ -1,0 +1,4 @@
+django>=3.2,<4
+python-dotenv>=0.21
+psycopg2-binary>=2.9
+ariadne>=0.20

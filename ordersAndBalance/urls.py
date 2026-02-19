@@ -16,7 +16,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from core import views
-
+from ariadne_django.views import GraphQLView
+from core.api.query import schema
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,4 +25,5 @@ urlpatterns = [
     path('hello/<str:name>/', views.hello, name='hello'),
     path('json/', views.json, name="json"),
     path('orders/', views.orders, name="orders"),
+    path('graphql/', GraphQLView.as_view(schema=schema), name='graphql'),
 ]
