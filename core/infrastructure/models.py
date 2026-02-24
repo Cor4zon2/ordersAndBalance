@@ -6,7 +6,7 @@ class Order(models.Model):
     created_at = models.DateField()
 
     def __str__(self):
-        return self.title
+        return str(self.title)
 
 
 class BalanceLedger(models.Model):
@@ -17,11 +17,17 @@ class BalanceLedger(models.Model):
 
 
 class Payment(models.Model):
-    amount = models.FloatField(default=0)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
     created_at = models.DateField()
-    balance_ledger = models.ForeignKey(
+    balance_ledger = models.OneToOneField(
         BalanceLedger,
         on_delete=models.CASCADE,
+    )
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     
     def __str__(self):
@@ -30,8 +36,15 @@ class Payment(models.Model):
 
 class Refund(models.Model):
     created_at = models.DateField()
+    reason = models.CharField(max_length=1000, default="-")
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
-        return self.createdAt
+        return str(self.reason)
 
 
