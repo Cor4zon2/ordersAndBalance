@@ -7,44 +7,46 @@ query = QueryType()
 mutation = MutationType()
 
 type_defs = gql("""
-    input OrderItemInput {
+    type OrderItem {
         id: ID!
-        title: String!
-        author: String!
-        createdAt: String!
+        name: String
+        amount: Int!
     }
 
-    input CreateOrderInput {
-        item: OrderItemInput
+    enum OrderStatus {
+        PENDING
+        PAID
+        CANCELED
     }
 
     type Order {
         id: ID!
-        title: String!
-        author: String!
-        createdAt: String!
+        items: [OrderItem!]!
+        price: Int!
+        clientId: ID!
+        status: OrderStatus!
+    }
+
+    input OrderItemInput {
+        id: ID!
+        amount: Int!
+    }
+    
+    input CreateOrderInputs {
+        clientId: ID!
+        items: [OrderItemInput!]!
     }
 
     type Mutation {
-        createOrder(data: CreateOrderInput!): Order!
+        createOrder(inputs: CreateOrderInputs): Order!
     }
 
-    type Balance {
-        id: ID!
-        balance: Int!
-    }
-
-    input BalanceInput {
-        id: Int!
-    }
-
-    input GetOrderInput {
+    input GetOrderInputs {
         id: ID!
     }
 
     type Query {
-        balance(input: BalanceInput): Balance!
-        order(input: GetOrderInput): Order!
+        getOrder(inputs: GetOrderInputs): Order!
     }
 """)
 
