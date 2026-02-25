@@ -2,6 +2,7 @@ from ariadne import gql, QueryType, make_executable_schema, MutationType, snake_
 from ariadne.asgi import GraphQL
 
 from core.infrastructure.models import Order
+from core.domain.domain import create_order, get_order_by_id
 
 query = QueryType()
 mutation = MutationType()
@@ -22,6 +23,7 @@ type_defs = gql("""
     type Order {
         id: ID!
         items: [OrderItem!]!
+        # потенциальная ошибка
         price: Int!
         clientId: ID!
         status: OrderStatus!
@@ -50,24 +52,26 @@ type_defs = gql("""
     }
 """)
 
-@query.field("balance")
-def resolve_balance(*_):
-    pass
 
 
 @mutation.field("createOrder")
-def resolve_create_mutation(obj, info, data):
-    print(f"Данные с frontend: {data}")
-    order = Order.objects.create(title=data['item']["title"], author=data['item']["author"], created_at=data['item']["createdAt"])
-    print("Success in creating order")
-    return order
+def resolve_create_mutation(obj, info, inputs):
+    items = inputs["items"]
+    clientId = inputs["clientId"]
+
+    order = {
+        "clientId": clientId,
+        "items": items,
+    }
+    new_order = create_order(order)
+
+    return new_order
 
 
-@query.field("order") 
-def resolve_order(obj, info, input):
-    print("Пошли")
-    order = Order.objects.get(id=input["id"])
-    print("Нашли")
+@query.field("getOrder") 
+def resolve_get_order(obj, info, inputs):
+    id = inputs["id"]
+    order = get_order_by_id(id)
     return order
 
 schema = make_executable_schema(type_defs, query, mutation, snake_case_fallback_resolvers)

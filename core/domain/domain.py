@@ -1,11 +1,28 @@
 
 
-# ключевые действия пользователя с данными
+def create_order(order):
+    return {
+        "id": "mock-id",
+        "items": [
+            {"id": 1, "name": "Iphone 17", "amount": 3},
+            {"id": 2, "name": "New TV", "amount": 1},
+            {"id": 3, "name": "Book", "amount": 2}
+            ],
+        "price": 1000,
+        "clientId": 101,
+        "status": "PAID"
+    }
 
-# 1 – создать заказ
 
-# 2 – оплатить заказ
-
-# 3 – сделать возврат (удалить заказ)
-
-# 4 – 
+def get_order_by_id(id):
+    return {
+        "id": "mock-id",
+        "items": [
+            {"id": 21, "name": "Socks", "amount": 1},
+            {"id": 32, "name": "MusicBox", "amount": 1},
+            {"id": 13, "name": "Book", "amount": 22}
+            ],
+        "price": 55,
+        "clientId": 10,
+        "status": "PENDING"
+    }
