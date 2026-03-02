@@ -1,7 +1,7 @@
 from ariadne import gql, QueryType, make_executable_schema, MutationType, snake_case_fallback_resolvers
 from ariadne.asgi import GraphQL
 
-from core.infrastructure.models import Order
+from core.infrastructure.models import Order, Refund
 from core.domain.domain import create_order, get_order_by_id
 
 query = QueryType()
@@ -99,13 +99,19 @@ def resolve_create_mutation(obj, info, inputs):
 
 @query.field("getOrder") 
 def resolve_get_order(obj, info, inputs):
-    # id = inputs["id"]
-    # order = get_order_by_id(id)
-    # return order
+    id = inputs["id"]
+    order = get_order_by_id(id)
+    return order
 
-    orders = Order.objects.all()[:5]
-    for order in orders:
-        print(order.title)
+
+@query.field("getRefundsList")
+def resolve_get_refunds(obj, info):
+    refunds = Refund.objects.all()
+
+    for refund in refunds:
+        print(refund.order.title)
+
+    return refunds
 
 schema = make_executable_schema(type_defs, query, mutation, snake_case_fallback_resolvers)
 app = GraphQL(schema, debug=True)

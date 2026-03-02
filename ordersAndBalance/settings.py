@@ -135,17 +135,41 @@ STATIC_URL = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGGING = {
+    {
     "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
+    "disable_existing_loggers": false,
+    "formatters": {
+        "simple": {
+        "format": "%(asctime)s - %(levelname)s : %(message)s"
         },
+        "detailed": {
+        "format": "%(asctime)s - %(levelname)s - %(module)s(L%(lineno)d) : %(message)s",
+        "datefmt": "%Y-%m-%dT%H:%M:%S%z"
+        }
+    },
+    "handlers": {
+        "stderr": {
+        "class": "logging.StreamHandler",
+        "level": "WARNING",
+        "formatter": "simple"
+        },
+        "file": {
+        "class": "logging.handlers.RotatingFileHandler",
+        "level": "DEBUG",
+        "formatter": "detailed",
+        "filename": "logs/my_app.log",
+        "maxBytes": 1000000,
+        "backupCount": 3
+        }
     },
     "loggers": {
-        "django.db.backends": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-        },
-    },
+        "root": {
+        "level": "DEBUG",
+        "handlers": [
+            "stderr",
+            "file"
+        ]
+        }
+    }
+    }
 }
