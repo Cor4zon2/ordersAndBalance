@@ -68,7 +68,7 @@ type_defs = gql("""
         id: ID!
         orderId: ID!
         reason: String!
-        createdAt: DateTime!
+        createdAt: String!
     }
 
     type RefundsList {
@@ -81,7 +81,9 @@ type_defs = gql("""
     }
 """)
 
-
+import logging
+logger = logging.getLogger(__name__)
+logger.error("Это должно быть видно везде!")
 
 @mutation.field("createOrder")
 def resolve_create_mutation(obj, info, inputs):
