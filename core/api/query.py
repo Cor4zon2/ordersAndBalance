@@ -39,16 +39,45 @@ type_defs = gql("""
         items: [OrderItemInput!]!
     }
 
+    union CreateRefundResult = SuccessfullyCreatedRefund | ErrorUnknown
+
+    type SuccessfullyCreatedRefund {
+        _: Boolean
+    }
+
+    type ErrorUnknown {
+        title: String!
+        errorCode: String
+    }
+
+    input CreateRefundInput {
+        reason: String!
+        orderId: ID!
+    }
+
     type Mutation {
         createOrder(inputs: CreateOrderInputs): Order!
+        createRefund(inputs: CreateRefundInput): CreateRefundResult!
     }
 
     input GetOrderInputs {
         id: ID!
     }
 
+    type RefundType {
+        id: ID!
+        orderId: ID!
+        reason: String!
+        createdAt: DateTime!
+    }
+
+    type RefundsList {
+        refunds: [RefundType!]!
+    }
+
     type Query {
         getOrder(inputs: GetOrderInputs): Order!
+        getRefundsList: RefundsList!
     }
 """)
 
@@ -70,9 +99,13 @@ def resolve_create_mutation(obj, info, inputs):
 
 @query.field("getOrder") 
 def resolve_get_order(obj, info, inputs):
-    id = inputs["id"]
-    order = get_order_by_id(id)
-    return order
+    # id = inputs["id"]
+    # order = get_order_by_id(id)
+    # return order
+
+    orders = Order.objects.all()[:5]
+    for order in orders:
+        print(order.title)
 
 schema = make_executable_schema(type_defs, query, mutation, snake_case_fallback_resolvers)
 app = GraphQL(schema, debug=True)
