@@ -55,8 +55,24 @@ type_defs = gql("""
         orderId: ID!
     }
 
+    type SuccessOrderCreation {
+        order: Order!
+    }
+
+    type ErrorBalance {
+        error: String!
+        errorCode: String
+    }
+
+    type ErrorOrderPrice {
+        error: String!
+        errorCode: String
+    }
+
+    union CreateOrderResult = SuccessOrderCreation | ErrorBalance | ErrorOrderPrice
+
     type Mutation {
-        createOrder(inputs: CreateOrderInputs): Order!
+        createOrder(inputs: CreateOrderInputs): CreateOrderResult!
         createRefund(inputs: CreateRefundInput): CreateRefundResult!
     }
 
@@ -108,12 +124,9 @@ def resolve_get_order(obj, info, inputs):
 
 @query.field("getRefundsList")
 def resolve_get_refunds(obj, info):
-    refunds = Refund.objects.all()
+    refunds = Refund.objects.select_related("order").all()
 
-    for refund in refunds:
-        print(refund.order.title)
-
-    return refunds
+    return {"refunds": refunds}
 
 schema = make_executable_schema(type_defs, query, mutation, snake_case_fallback_resolvers)
 app = GraphQL(schema, debug=True)
