@@ -1,8 +1,10 @@
-from ariadne import gql, QueryType, make_executable_schema, MutationType, snake_case_fallback_resolvers
+from ariadne import gql, QueryType, make_executable_schema, MutationType, snake_case_fallback_resolvers, UnionType
 from ariadne.asgi import GraphQL
 
 from core.infrastructure.models import Order, Refund
 from core.domain.domain import create_order, get_order_by_id
+
+from datetime import datetime
 
 query = QueryType()
 mutation = MutationType()
@@ -151,7 +153,7 @@ type_defs = gql("""
 
 import logging
 logger = logging.getLogger(__name__)
-logger.error("Это должно быть видно везде!")
+# logger.error("Это должно быть видно везде!")
 
 @mutation.field("createOrder")
 def resolve_create_mutation(obj, info, inputs):
@@ -167,18 +169,83 @@ def resolve_create_mutation(obj, info, inputs):
     return new_order
 
 
-@query.field("getOrder") 
-def resolve_get_order(obj, info, inputs):
-    id = inputs["id"]
-    order = get_order_by_id(id)
-    return order
+get_user_result = UnionType("GetUserResult")
+
+@get_user_result.type_resolver
+def resolve_get_user_result_type(obj, *_):
+    if ("user" in obj):
+        return "SuccessfullyGetUser"
+    return "ErrorAuth"
+
+@query.field("getUser")
+def resolve_get_user(obj, info, input):
+    return {
+        "user": {
+            "id": 107,
+            "name": "John Jackson",
+            "email": "john@gmail.com",
+            "wallet": {
+                "id": 4,
+                "user_id": 107,
+                "balance": 1090,
+            }
+        }
+    }
 
 
-@query.field("getRefundsList")
-def resolve_get_refunds(obj, info):
-    refunds = Refund.objects.select_related("order").all()
+@query.field("getOrdersList")
+def resolve_get_orders_list(obj, info, input):
+    id = input["userId"]
+    last_id = input.get("lastId")
+    order_status = input.get("orderStatus")
 
-    return {"refunds": refunds}
+    created_at = datetime.now()
+    
+    return {
+        "orders": [
+            {
+                "id": 1,
+                "idempotency_key": "1a2bc3",
+                "user_id": 103,
+                "total_price": 20000,
+                "created_at": created_at,
+                "status": "PENDING",
+                "items": [
+                    {
+                        "id": 1,
+                        "product": {
+                            "id": 1,
+                            "name": "Iphone 17",
+                            "price": 10000
+                        },
+                        "product_price_freezed": 10000,
+                        "quantity": 2,
+                    },
+                ]
+            },
+        ]
+    }
 
-schema = make_executable_schema(type_defs, query, mutation, snake_case_fallback_resolvers, mock=True)
+
+@query.field("getProductList")
+def resolve_get_products_list(obj, info, input):
+    return {
+        "products": [{
+            "id": 1,
+            "name": "Iphone 17",
+            "price": 10000
+        },
+        {
+            "id": 2,
+            "name": "Moby Dick Book",
+            "price": 204
+        },
+        {
+            "id": 3,
+            "name": "Flowers",
+            "price": 170
+        },]
+    }
+
+schema = make_executable_schema(type_defs, query, mutation, snake_case_fallback_resolvers, get_user_result)
 app = GraphQL(schema, debug=True)
