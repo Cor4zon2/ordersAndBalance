@@ -8,12 +8,6 @@ query = QueryType()
 mutation = MutationType()
 
 type_defs = gql("""
-    type OrderItem {
-        id: ID!
-        name: String
-        amount: Int!
-    }
-
     enum OrderStatus {
         PENDING
         PAID
@@ -22,78 +16,136 @@ type_defs = gql("""
 
     type Order {
         id: ID!
-        items: [OrderItem!]!
-        # потенциальная ошибка
-        price: Int!
-        clientId: ID!
+        idempotencyKey: String!
+        userId: ID!
+        totalPrice: Int!
+        createdAt: String!
         status: OrderStatus!
+        items: [OrderProducts!]!
     }
 
-    input OrderItemInput {
+    type OrderProducts {
         id: ID!
-        amount: Int!
-    }
-    
-    input CreateOrderInputs {
-        clientId: ID!
-        items: [OrderItemInput!]!
+        product: Product!
+        productPriceFreezed: Int!
+        quantity: Int!
     }
 
-    union CreateRefundResult = SuccessfullyCreatedRefund | ErrorUnknown
-
-    type SuccessfullyCreatedRefund {
-        _: Boolean
-    }
-
-    type ErrorUnknown {
-        title: String!
-        errorCode: String
-    }
-
-    input CreateRefundInput {
-        reason: String!
-        orderId: ID!
-    }
-
-    type SuccessOrderCreation {
-        order: Order!
-    }
-
-    type ErrorBalance {
-        error: String!
-        errorCode: String
-    }
-
-    type ErrorOrderPrice {
-        error: String!
-        errorCode: String
-    }
-
-    union CreateOrderResult = SuccessOrderCreation | ErrorBalance | ErrorOrderPrice
-
-    type Mutation {
-        createOrder(inputs: CreateOrderInputs): CreateOrderResult!
-        createRefund(inputs: CreateRefundInput): CreateRefundResult!
-    }
-
-    input GetOrderInputs {
+    type Product {
         id: ID!
+        name: String!
+        price: Int!
     }
 
-    type RefundType {
+    type User {
         id: ID!
+        name: String!
+        email: String!
+        wallet: Wallet!
+    }
+
+    type Wallet {
+        id: ID!
+        userId: ID!
+        balance: Int!
+    }
+
+    type Refund {
+        id: ID!
+        idempotencyKey: String!
         orderId: ID!
         reason: String!
         createdAt: String!
     }
 
-    type RefundsList {
-        refunds: [RefundType!]!
+    type SuccessOrderCreation {
+        success: Boolean!
+    }
+
+    type ErrorUnknown {
+        title: String!
+        message: String!
+    }
+
+    type ErrorBalance {
+        title: String!
+        message: String!
+    }
+
+    # mutation
+
+    union CreateOrderResults = SuccessOrderCreation | ErrorUnknown | ErrorBalance
+
+    input OrderItemInput {
+        productId: ID!
+        quantity: Int!
+    }
+
+    input CreateOrderInputs {
+        userId: ID!
+        idempotencyKey: String!
+        items: [OrderItemInput!]!
+    }
+
+    type SuccessRefundCreation {
+        success: Boolean!
+    }
+
+    union CreateRefundResults = SuccessRefundCreation | ErrorUnknown
+
+    input CreateRefundInputs {
+        orderId: ID!
+        userId: ID!
+        reason: String!
+        idempotencyKey: String!
+    }
+
+    type Mutation {
+        createOrder(input: CreateOrderInputs!): CreateOrderResults!
+        createRefund(input: CreateRefundInputs!): CreateRefundResults!
+    }
+
+
+    # query
+
+    input GetUserInputs {
+        userId: ID!
+    }
+
+
+    type SuccessfullyGetUser {
+        user: User!
+    }
+
+    type ErrorAuth {
+        title: String!
+        message: String!
+    }
+
+    union GetUserResult = SuccessfullyGetUser | ErrorAuth
+
+    input GetOrderListInputs {
+        userId: ID!
+        lastId: ID
+        orderStatus: OrderStatus
+    }
+
+    type GetOrdersListResult {
+        orders: [Order!]!
+    }
+
+    input GetProductListInputs {
+        lastId: ID
+    }
+
+    type GetProductListResult {
+        products: [Product!]!
     }
 
     type Query {
-        getOrder(inputs: GetOrderInputs): Order!
-        getRefundsList: RefundsList!
+        getUser(input: GetUserInputs): GetUserResult!
+        getOrdersList(input: GetOrderListInputs!): GetOrdersListResult!
+        getProductList(input: GetProductListInputs!): GetProductListResult!
     }
 """)
 
@@ -128,5 +180,5 @@ def resolve_get_refunds(obj, info):
 
     return {"refunds": refunds}
 
-schema = make_executable_schema(type_defs, query, mutation, snake_case_fallback_resolvers)
+schema = make_executable_schema(type_defs, query, mutation, snake_case_fallback_resolvers, mock=True)
 app = GraphQL(schema, debug=True)
