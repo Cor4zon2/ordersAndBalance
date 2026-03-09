@@ -8,6 +8,7 @@ from core.infrastructure.models import (
     IdempotencyRecords,
     Order,
     OrderProducts,
+    Payment,
     Product,
     Refund,
     User,
@@ -75,3 +76,14 @@ class RefundFactory(DjangoModelFactory):
     idempotency_key = LazyFunction(uuid.uuid4)
     order = SubFactory(OrderFactory)
     reason = Faker("sentence")
+
+
+class PaymentFactory(DjangoModelFactory):
+    class Meta:
+        model = Payment
+
+    idempotency_key = LazyFunction(uuid.uuid4)
+    wallet = SubFactory(WalletFactory)
+    order = SubFactory(OrderFactory)
+    status = factory.Iterator(["PENDING", "PAID", "CANCELED"])
+    price = Faker("random_int", min=100, max=100_000)

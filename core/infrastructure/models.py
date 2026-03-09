@@ -2,6 +2,11 @@ from django.db import models
 import uuid
 
 
+class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Ожидает оплаты'
+        PAID = 'PAID', 'Оплачен'
+        CANCELED = 'CANCELED', 'Отменен'
+
 class User(models.Model):
     name = models.CharField(max_length=200)
     email = models.EmailField(max_length=200)
@@ -11,17 +16,11 @@ class User(models.Model):
 
 
 class Order(models.Model):
-    class Status(models.TextChoices):
-        PENDING = 'PENDING', 'Ожидает оплаты'
-        PAID = 'PAID', 'Оплачен'
-        CANCELED = 'CANCELED', 'Отменен'
-
-
     idempotency_key = models.CharField(max_length=100, unique=True, default=uuid.uuid4)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     total_price = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=10, choices=Status.choices ,default=Status.PENDING)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
 
     def __str__(self):
         return f"Заказ {self.id} от {self.user}"
@@ -55,7 +54,7 @@ class Wallet(models.Model):
 class IdempotencyRecords(models.Model):
     idempotency_key = models.CharField(max_length=200, unique=True, default=uuid.uuid4)
     namespace = models.CharField(max_length=200)
-    status = models.CharField(max_length=200)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True )
 
 
@@ -70,6 +69,13 @@ class Refund(models.Model):
         return f"Заказ {self.order} был вовращен {self.created_at} по причине: {self.reason}"
 
 
+class Payment(models.Model):
+    idempotency_key = models.CharField(max_length=200, unique=True, default=uuid.uuid4)
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    price = models.IntegerField()
 
-
-
+    def __str__(self):
+        return f"Оплата заказа {self.order} от {self.created_at} со статусом {self.status}"

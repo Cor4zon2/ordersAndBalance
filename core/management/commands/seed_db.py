@@ -4,6 +4,7 @@ from core.infrastructure.tests.factories import (
     IdempotencyRecordsFactory,
     OrderFactory,
     OrderProductsFactory,
+    PaymentFactory,
     ProductFactory,
     RefundFactory,
     UserFactory,
@@ -32,7 +33,7 @@ class Command(BaseCommand):
         self.stdout.write(f"Создаём {n_users} пользователей с кошельками и заказами...")
         for i in range(n_users):
             user = UserFactory()
-            WalletFactory(user=user)
+            wallet = WalletFactory(user=user)
 
             # Заказ PENDING
             order_pending = OrderFactory(user=user, status="PENDING")
@@ -43,6 +44,7 @@ class Command(BaseCommand):
             order_paid = OrderFactory(user=user, status="PAID")
             for product in products[3:6]:
                 OrderProductsFactory(order=order_paid, product=product)
+            PaymentFactory(wallet=wallet, order=order_paid, status="PAID", price=order_paid.total_price)
             RefundFactory(order=order_paid)
 
             # Заказ CANCELED
@@ -60,6 +62,7 @@ class Command(BaseCommand):
             f"  Продуктов:           {n_products}\n"
             f"  Заказов:             {n_users * 3}\n"
             f"  Позиций в заказах:   {n_users * 8}\n"
+            f"  Платежей:            {n_users}\n"
             f"  Возвратов:           {n_users}\n"
             f"  Записей идемпот.:    10\n"
         ))

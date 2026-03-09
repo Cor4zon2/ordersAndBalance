@@ -167,6 +167,15 @@ type_defs = gql("""
         products: [Product!]!
     }
 
+    input GetPaymentsListInput {
+        userId: ID!
+        lastId: ID
+    }
+
+    type GetPaymentListResult {
+        payments: [Payment!]!
+        lastId: ID!
+    }
 
     type Query {
         getUser(input: GetUserInputs): GetUserResult!

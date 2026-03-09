@@ -6,6 +6,7 @@ from core.infrastructure.tests.factories import (
     IdempotencyRecordsFactory,
     OrderFactory,
     OrderProductsFactory,
+    PaymentFactory,
     ProductFactory,
     RefundFactory,
     UserFactory,
@@ -16,11 +17,12 @@ products = ProductFactory.create_batch(10)
 
 for _ in range(5):
     user = UserFactory()
-    WalletFactory(user=user)
+    wallet = WalletFactory(user=user)
 
     order = OrderFactory(user=user, status="PAID")
     for product in products[:3]:
         OrderProductsFactory(order=order, product=product)
+    PaymentFactory(wallet=wallet, order=order, status="PAID", price=order.total_price)
     RefundFactory(order=order)
 
     order_pending = OrderFactory(user=user, status="PENDING")
