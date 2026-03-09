@@ -26,3 +26,30 @@ def get_order_by_id(id):
         "clientId": 10,
         "status": "PENDING"
     }
+
+
+class InsufficientFundsError(Exception):
+    pass
+
+@dataclass
+class User:
+    id: int
+    name: str 
+    email: str
+    balance: int
+
+    def get_user(self):
+        return {
+            "name": self.name,
+            "email": self.email,
+        }
+
+    def check_balance(self):
+        return self.balance
+
+
+    def can_pay(self, amount: int) -> bool:
+        if self.balance < amount:
+            raise InsufficientFundsError(f"Недостаточно средств в кошельке: {self.balance} для оплаты {amount}")
+
+        return True
