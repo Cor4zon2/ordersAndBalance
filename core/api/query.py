@@ -158,10 +158,10 @@ logger = logging.getLogger(__name__)
 @mutation.field("createOrder")
 def resolve_create_mutation(obj, info, inputs):
     items = inputs["items"]
-    clientId = inputs["clientId"]
+    userId = inputs["userId"]
 
     order = {
-        "clientId": clientId,
+        "userId": userId,
         "items": items,
     }
     new_order = create_order(order)
