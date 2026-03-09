@@ -60,6 +60,16 @@ type_defs = gql("""
         createdAt: String!
     }
 
+    type Payment {
+        id: ID!
+        idempotencyKey: String!
+        wallet: Wallet!
+        order: Order!
+        price: Int!
+        createdAt: String!
+        status: OrderStatus!
+    }
+
     type SuccessOrderCreation {
         success: Boolean!
     }
@@ -102,9 +112,22 @@ type_defs = gql("""
         idempotencyKey: String!
     }
 
+    type SuccessPaymentCreation {
+        success: Boolean!
+    }
+
+    union CreatePaymentResult = SuccessPaymentCreation | ErrorUnknown
+
+    input CreatePaymentInput {
+        idempotencyKey: String!
+        orderId: ID!
+        walletId: ID!
+    }
+
     type Mutation {
         createOrder(input: CreateOrderInputs!): CreateOrderResults!
         createRefund(input: CreateRefundInputs!): CreateRefundResults!
+        createPayment(input: CreatePaymentInput!): CreatePaymentResult!
     }
 
 
@@ -144,10 +167,12 @@ type_defs = gql("""
         products: [Product!]!
     }
 
+
     type Query {
         getUser(input: GetUserInputs): GetUserResult!
         getOrdersList(input: GetOrderListInputs!): GetOrdersListResult!
         getProductList(input: GetProductListInputs!): GetProductListResult!
+        getPaymentsList(input: GetPaymentsListInput!): GetPaymentListResult!
     }
 """)
 
@@ -156,7 +181,7 @@ logger = logging.getLogger(__name__)
 # logger.error("Это должно быть видно везде!")
 
 @mutation.field("createOrder")
-def resolve_create_mutation(obj, info, inputs):
+def resolve_create_order(obj, info, inputs):
     items = inputs["items"]
     userId = inputs["userId"]
 
@@ -168,6 +193,24 @@ def resolve_create_mutation(obj, info, inputs):
 
     return new_order
 
+
+create_payment_result = UnionType("CreatePaymentResult")
+
+
+@create_payment_result.type_resolver
+def resolve_create_payment_result(obj, *_):
+    if ("success" in obj):
+        return "SuccessPaymentCreation"
+    return "ErrorUnknown"
+
+
+@mutation.field("createPayment")
+def resolve_create_payment(obj, info, input):
+    return {
+        "success": true
+    }
+
+    
 
 get_user_result = UnionType("GetUserResult")
 
