@@ -2,7 +2,8 @@ from ariadne import gql, QueryType, make_executable_schema, MutationType, snake_
 from ariadne.asgi import GraphQL
 
 from core.infrastructure.models import Order, Refund
-from core.domain.domain import create_order, get_order_by_id
+from core.infrastructure.repositories.product_repository import DjangoProductRepository
+from core.domain.domain import create_order, get_products_list
 
 from datetime import datetime
 
@@ -281,23 +282,10 @@ def resolve_get_orders_list(obj, info, input):
 
 @query.field("getProductList")
 def resolve_get_products_list(obj, info, input):
-    return {
-        "products": [{
-            "id": 1,
-            "name": "Iphone 17",
-            "price": 10000
-        },
-        {
-            "id": 2,
-            "name": "Moby Dick Book",
-            "price": 204
-        },
-        {
-            "id": 3,
-            "name": "Flowers",
-            "price": 170
-        },]
-    }
+    lastId = input["lastId"]
+    product_repo = DjangoProductRepository()
+    products = get_products_list(product_repo, lastId)
+    return { "products": products }
 
 schema = make_executable_schema(type_defs, query, mutation, snake_case_fallback_resolvers, get_user_result)
 app = GraphQL(schema, debug=True)

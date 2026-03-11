@@ -1,55 +1,60 @@
+from dataclasses import dataclass
+from typing import List
+
+from django.db import transaction
+
+from core.domain.interfaces import IProductRepository
 
 
-def create_order(order):
-    return {
-        "id": "mock-id",
-        "items": [
-            {"id": 1, "name": "Iphone 17", "amount": 3},
-            {"id": 2, "name": "New TV", "amount": 1},
-            {"id": 3, "name": "Book", "amount": 2}
-            ],
-        "price": 1000,
-        "clientId": 101,
-        "status": "PAID"
-    }
 
-
-def get_order_by_id(id):
-    return {
-        "id": "mock-id",
-        "items": [
-            {"id": 21, "name": "Socks", "amount": 1},
-            {"id": 32, "name": "MusicBox", "amount": 1},
-            {"id": 13, "name": "Book", "amount": 22}
-            ],
-        "price": 55,
-        "clientId": 10,
-        "status": "PENDING"
-    }
-
-
-class InsufficientFundsError(Exception):
+def get_user(user_id: int):
     pass
 
+
+def get_orders_list(user_id: int, last_id: int, order_status):
+    pass
+
+
+def get_products_list(prodcut_repo: IProductRepository,last_id: int):
+    products_dict = prodcut_repo.get_all()
+    return [{"id": p_id, "name": p_info["name"], "price": p_info["price"]} for p_id, p_info in products_dict.items()]
+    
+
+
+def get_payments_list(user_id: int, last_id: int):
+    pass
+
+
+def parse_items(items):
+    return {}
+
 @dataclass
-class User:
-    id: int
-    name: str 
-    email: str
-    balance: int
-
-    def get_user(self):
-        return {
-            "name": self.name,
-            "email": self.email,
-        }
-
-    def check_balance(self):
-        return self.balance
+class OrderProductDTO:
+    productId: int
+    quantity: int
 
 
-    def can_pay(self, amount: int) -> bool:
-        if self.balance < amount:
-            raise InsufficientFundsError(f"Недостаточно средств в кошельке: {self.balance} для оплаты {amount}")
 
-        return True
+def create_order(user_id: int, idempotency_key: str, products: List[OrderProductDTO]):
+    with transaction.atomic:
+        already_processed = itempotency_repository.check_key(idempotency_key)
+
+        if already_processed:
+            # возващаем success или ошибку, уже был создан
+            pass
+
+
+        product_ids = [item.productId for item in products]
+
+        order_id = order_repository.create_order(user_id, idempotency_key, items)
+        orderProducts_repository.create_order_products(products, order_id)
+        itempotency_repository.save_key(idempotency_key)
+    
+        return {}
+
+def create_refund(order_id: int, user_id: int, reason: str, idempotency_key: str):
+    pass
+
+
+def create_payment(idempotency_key: str, order_id: int, wallet_id: int):
+    pass

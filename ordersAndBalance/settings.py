@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 from pathlib import Path
+import structlog
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -146,36 +147,46 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "simple": {
-        "format": "%(asctime)s - %(levelname)s : %(message)s"
+        "json_formatter": {
+            "()": structlog.stdlib.ProcessorFormatter,
+            "processor": structlog.processors.JSONRenderer(),
         },
-        "detailed": {
-        "format": "%(asctime)s - %(levelname)s - %(module)s(L%(lineno)d) : %(message)s",
-        "datefmt": "%Y-%m-%dT%H:%M:%S%z"
-        }
     },
     "handlers": {
-        "stderr": {
-        "class": "logging.StreamHandler",
-        "level": "WARNING",
-        "formatter": "simple"
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json_formatter",
         },
-        "file": {
-        "class": "logging.handlers.RotatingFileHandler",
-        "level": "DEBUG",
-        "formatter": "detailed",
-        "filename": "logs/my_app.log",
-        "maxBytes": 1000000,
-        "backupCount": 3
-        }
     },
     "loggers": {
-        "root": {
-        "level": "DEBUG",
-        "handlers": [
-            "stderr",
-            "file"
-        ]
-        }
-    }
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        # Наш логгер для приложения
+        "": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+    },
 }
+
+
+
+structlog.configure(
+    processors=[
+        # 0. Наш процессор для дополнительных настроек
+        structlog.contextvars.merge_contextvars,
+        # 1. Добавляет уровень лога (info, error и т.д.)
+        structlog.processors.add_log_level,
+        # 2. Добавляет таймстемп
+        structlog.processors.TimeStamper(fmt="iso"),
+        # 3. Позволяет использовать позиционные аргументы (как в обычном логгере)
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        # 4. Собирает всё в JSON (удобно для серверов) или в текст (для разработки)
+        structlog.processors.JSONRenderer() 
+    ],
+    # Используем обертку для стандартной библиотеки логгирования
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    cache_logger_on_first_use=True,
+)
