@@ -3,12 +3,18 @@ from typing import List
 
 from django.db import transaction
 
-from core.domain.interfaces import IProductRepository
+from core.domain.interfaces import IProductRepository, IUserRepository
 
 
 
-def get_user(user_id: int):
-    pass
+def get_user(user_repo: IUserRepository, user_id: int):
+    user_dict = user_repo.get_user(user_id)
+    wallet = {
+        "id": user_dict.wallet_id,
+        "balance": user_dict.wallet_balance,
+        "user_id": user_dict.id
+    }
+    return {"id": user_dict.id, "name": user_dict.name, "email": user_dict.email, "wallet": wallet}
 
 
 def get_orders_list(user_id: int, last_id: int, order_status):

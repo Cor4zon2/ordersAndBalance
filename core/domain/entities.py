@@ -37,11 +37,12 @@ class UserEntity:
     id: int
     name: str 
     email: str
-    balance: int
+    wallet_id: int
+    wallet_balance: int
 
     def can_pay(self, amount: int) -> bool:
-        if self.balance < amount:
-            raise InsufficientFundsError(f"Недостаточно средств в кошельке: {self.balance} для оплаты {amount}")
+        if self.wallet_balance < amount:
+            raise InsufficientFundsError(f"Недостаточно средств в кошельке: {self.wallet_balance} для оплаты {amount}")
 
         return True
 

@@ -2,8 +2,9 @@ from ariadne import gql, QueryType, make_executable_schema, MutationType, snake_
 from ariadne.asgi import GraphQL
 
 from core.infrastructure.models import Order, Refund
-from core.infrastructure.repositories.product_repository import DjangoProductRepository
-from core.domain.domain import create_order, get_products_list
+from core.infrastructure.repositories.product_repository import DjangoProductRepository 
+from core.infrastructure.repositories.user_repository import DjangoUserRepository
+from core.domain.domain import create_order, get_products_list, get_user
 
 from datetime import datetime
 
@@ -232,18 +233,12 @@ def resolve_get_user_result_type(obj, *_):
 
 @query.field("getUser")
 def resolve_get_user(obj, info, input):
-    return {
-        "user": {
-            "id": 107,
-            "name": "John Jackson",
-            "email": "john@gmail.com",
-            "wallet": {
-                "id": 4,
-                "user_id": 107,
-                "balance": 1090,
-            }
-        }
-    }
+    user_id = input["userId"]
+    user_repo = DjangoUserRepository()
+
+    user = get_user(user_repo, user_id)
+
+    return {"user": user}
 
 
 @query.field("getOrdersList")

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
-from core.domain.entities import ProductEntity
+from core.domain.entities import ProductEntity, UserEntity
 
 
 class IProductRepository(ABC):
@@ -15,3 +15,7 @@ class IProductRepository(ABC):
 
 
 
+class IUserRepository(ABC):
+    @abstractmethod
+    def get_user(self, user_id: int) -> Optional[UserEntity]:
+        pass
