@@ -5,7 +5,8 @@ from core.infrastructure.models import Order, Refund
 from core.infrastructure.repositories.product_repository import DjangoProductRepository 
 from core.infrastructure.repositories.user_repository import DjangoUserRepository
 from core.infrastructure.repositories.order_repository import DjangoOrderRepository
-from core.domain.domain import create_order, get_products_list, get_user
+from core.infrastructure.repositories.payment_repository import DjangoPaymentRepository
+from core.domain.domain import create_order, get_products_list, get_user, create_payment
 
 from datetime import datetime
 
@@ -218,10 +219,28 @@ def resolve_create_payment_result(obj, *_):
 
 @mutation.field("createPayment")
 def resolve_create_payment(obj, info, input):
-    return {
-        "success": true
-    }
+    idempotency_key = input["idempotencyKey"]
+    order_id = input["orderId"]
+    wallet_id = input["walletId"]
 
+    payment_repo = DjangoPaymentRepository()
+    result = create_payment(payment_repo, idempotency_key, order_id, wallet_id)
+
+    if result == "ERROR_NOT_FOUND":
+        return {
+        "title": "order or wallet not found",
+        "message": "order or wallet not found"
+        }
+
+    if result == "ERROR_INSUFFICIENT_FUNDS":
+        return {
+        "title": "Insufficient balance",
+        "message": "Insufficient balance"
+        }
+
+    return {
+        "success": True
+    }
     
 
 get_user_result = UnionType("GetUserResult")
@@ -249,6 +268,7 @@ def resolve_get_orders_list(obj, info, input):
     order_status = input.get("orderStatus")
 
     orders_repo = DjangoOrderRepository()
+    # todo: тут ошибка
     orders = orders_repo.get_all()
     return {"orders": orders}    
 
@@ -261,5 +281,5 @@ def resolve_get_products_list(obj, info, input):
     products = get_products_list(product_repo, lastId)
     return { "products": products }
 
-schema = make_executable_schema(type_defs, query, mutation, snake_case_fallback_resolvers, get_user_result)
+schema = make_executable_schema(type_defs, query, mutation, snake_case_fallback_resolvers, get_user_result, create_payment_result)
 app = GraphQL(schema, debug=True)

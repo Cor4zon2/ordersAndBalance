@@ -29,3 +29,9 @@ class IOrderRepository(ABC):
     @abstractmethod
     def get_all(self) -> List[OrderEntity]:
         pass
+
+
+class IPaymentRepository(ABC):
+    def create_payment(self, idempotency_key: str, order_id: int, wallet_id: int): 
+        pass
+

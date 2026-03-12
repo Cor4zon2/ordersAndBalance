@@ -3,7 +3,7 @@ from typing import List
 
 from django.db import transaction
 
-from core.domain.interfaces import IProductRepository, IUserRepository, IOrderRepository
+from core.domain.interfaces import IProductRepository, IUserRepository, IOrderRepository, IPaymentRepository
 
 
 
@@ -66,5 +66,6 @@ def create_refund(order_id: int, user_id: int, reason: str, idempotency_key: str
     pass
 
 
-def create_payment(idempotency_key: str, order_id: int, wallet_id: int):
-    pass
+def create_payment(payment_repo: IPaymentRepository, idempotency_key: str, order_id: int, wallet_id: int):
+    return payment_repo.create_payment(idempotency_key=idempotency_key, order_id=order_id, wallet_id=wallet_id)
+    
