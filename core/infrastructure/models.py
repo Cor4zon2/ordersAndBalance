@@ -17,10 +17,10 @@ class User(models.Model):
 
 class Order(models.Model):
     idempotency_key = models.CharField(max_length=100, unique=True, default=uuid.uuid4)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    total_price = models.IntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
+    total_price = models.IntegerField(default=0, verbose_name="Цена")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING, verbose_name="Статус")
 
     def __str__(self):
         return f"Заказ {self.id} от {self.user}"
@@ -35,28 +35,30 @@ class Product(models.Model):
 
 
 class OrderProducts(models.Model):
-    product = models.ForeignKey(Product, on_delete = models.CASCADE, default=1)
+    product = models.ForeignKey(Product, on_delete = models.CASCADE, default=1, verbose_name="Продукт")
     order = models.ForeignKey(
         Order, 
         on_delete = models.CASCADE, 
         related_name="items",
-        default=1,)
-    quantity = models.IntegerField(default=1)
-    product_price_freezed = models.IntegerField(default=1)
+        default=1,
+        verbose_name="Заказ",
+        )
+    quantity = models.IntegerField("Количество", default=1)
+    product_price_freezed = models.IntegerField("Фиксированная цена заказа", default=1)
     
     def __str__(self):
         return f"Цена {self.id}: {self.product_price_freezed}"
 
 
 class Wallet(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    balance = models.IntegerField()
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Пользователь")
+    balance = models.IntegerField("Баланс кошелька")
 
     def __str__(self):
         return f"Пользователь {self.user} имеет {self.balance} на счету"
 
 class IdempotencyRecords(models.Model):
-    idempotency_key = models.CharField(max_length=200, unique=True, default=uuid.uuid4)
+    idempotency_key = models.CharField("Ключ идемпотентности", max_length=200, unique=True, default=uuid.uuid4)
     namespace = models.CharField(max_length=200)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True )
@@ -64,7 +66,7 @@ class IdempotencyRecords(models.Model):
 
 
 class Refund(models.Model):
-    idempotency_key = models.CharField(max_length=200, unique=True, default=uuid.uuid4)
+    idempotency_key = models.CharField("Ключ идемпотентности", max_length=200, unique=True, default=uuid.uuid4)
     order = models.OneToOneField(Order, on_delete=models.CASCADE)
     reason = models.CharField(max_length=200)
     created_at =models.DateTimeField(auto_now_add=True)
@@ -74,20 +76,14 @@ class Refund(models.Model):
 
 
 class Payment(models.Model):
-    idempotency_key = models.CharField(max_length=200, unique=True, default=uuid.uuid4)
-    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
-    price = models.IntegerField()
+    idempotency_key = models.CharField("Ключ идемпотентности", max_length=200, unique=True, default=uuid.uuid4)
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, verbose_name="Кошелек пользователя")
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name="Заказ")
+    created_at = models.DateTimeField("Дата создания", auto_now_add=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING, verbose_name="Статус платежа")
+    price = models.IntegerField("Сумма платежа")
 
     def __str__(self):
         return f"Оплата заказа {self.order} от {self.created_at} со статусом {self.status}"
 
-
-
-
-# tests
-class Fruit(models.Model):
-    name = models.CharField(max_length=100, primary_key = True)
 
