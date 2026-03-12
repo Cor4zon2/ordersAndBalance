@@ -1,9 +1,9 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import List
 
 from django.db import transaction
 
-from core.domain.interfaces import IProductRepository, IUserRepository
+from core.domain.interfaces import IProductRepository, IUserRepository, IOrderRepository
 
 
 
@@ -17,8 +17,10 @@ def get_user(user_repo: IUserRepository, user_id: int):
     return {"id": user_dict.id, "name": user_dict.name, "email": user_dict.email, "wallet": wallet}
 
 
-def get_orders_list(user_id: int, last_id: int, order_status):
-    pass
+def get_orders_list(orders_repo: IOrderRepository, user_id: int, last_id: int, order_status):
+    orders_dict = orders_repo.get_all()
+    return [asdict(o) for o in orders_dict]
+    
 
 
 def get_products_list(prodcut_repo: IProductRepository,last_id: int):

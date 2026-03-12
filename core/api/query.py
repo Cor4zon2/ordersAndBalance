@@ -248,32 +248,10 @@ def resolve_get_orders_list(obj, info, input):
     last_id = input.get("lastId")
     order_status = input.get("orderStatus")
 
-    created_at = datetime.now()
-    
-    return {
-        "orders": [
-            {
-                "id": 1,
-                "idempotency_key": "1a2bc3",
-                "user_id": 103,
-                "total_price": 20000,
-                "created_at": created_at,
-                "status": "PENDING",
-                "items": [
-                    {
-                        "id": 1,
-                        "product": {
-                            "id": 1,
-                            "name": "Iphone 17",
-                            "price": 10000
-                        },
-                        "product_price_freezed": 10000,
-                        "quantity": 2,
-                    },
-                ]
-            },
-        ]
-    }
+    orders_repo = DjangoOrderRepository()
+    orders = orders_repo.get_all()
+    return {"orders": orders}    
+
 
 
 @query.field("getProductList")

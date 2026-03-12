@@ -56,10 +56,10 @@ class ProductEntity:
     price: int
 
 @dataclass
-class OrderProduct:
+class OrderProductEntity:
     id: int
     product: ProductEntity
-    price_freezed: int
+    product_price_freezed: int
     quantity: int
 
 class OrderStatus(Enum):
@@ -71,11 +71,12 @@ class OrderStatus(Enum):
 @dataclass
 class OrderEntity:
     id: int
+    idempotency_key: str
     user_id: int
     total_price: int
     created_at: str
     status: OrderStatus
-    items: List[OrderProduct]
+    items: List[OrderProductEntity]
 
 
 @dataclass

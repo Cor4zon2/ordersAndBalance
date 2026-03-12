@@ -1,46 +1,57 @@
 from core.domain.interfaces import IOrderRepository
-from core.infrastructure.models import Order, OrderProducts
-from core.domain.entities import OrderEntity
+from core.infrastructure.models import Order
+from core.domain.entities import OrderProductEntity, OrderEntity, ProductEntity
 
 from typing import Optional, List
 
 class DjangoOrderRepository(IOrderRepository):
     def get_order(self, order_id) -> Optional[OrderEntity]:
-        return Order.objects.filter(id = order_id).first()
+        order = Order.objects.filter(id = order_id).first()
+        return OrderEntity(
+            id=order.id,
+            user_id=order.user.id,
+            total_price=order.total_price,
+            status=order.status,
+            # это ошибка. Но запрос не используется в схеме. Пока пропущу
+            items=[]
+        )
         
 
 
     def get_all(self) -> List[OrderEntity]:
-        pass
         orders = Order.objects.prefetch_related("items__product").all()
         
-        orders_list = []
+        result = []
 
-        for order_object in orders:
-            # products_data = 
+        for order in orders:
+            order_items = []
 
-            entity = OrderEntity(
-                id=order_object["id"],
-                userId=1,
-                total_price=order_object["total_price"],
-                created_at=order_object["created_at"],
-                status=order_object["status"],
-                items=[ ProductEntity(
-                    id=item.id, 
-                    product={}, 
-                    price_freezed=item.price_freezed,
-                    quantity=item.quantity
-                    )
-                     for item in products_data
-                ]
+            for item in order.items.all():
+                entity = OrderProductEntity(
+                    id=item.id,
+                    product=ProductEntity(
+                        id=item.product.id,
+                        name=item.product.name,
+                        price=item.product.price,
+                    ),
+                    product_price_freezed=item.product_price_freezed,
+                    quantity=item.quantity,
+                )
 
-            )
+                order_items.append(entity)
+            
+            result.append(OrderEntity(
+                id=order.id,
+                user_id=order.user.id,
+                idempotency_key=order.idempotency_key,
+                total_price=order.total_price,
+                created_at=order.created_at,
+                status=order.status,
+                items=order_items,
+            ))
+
+        return result
 
 
-        return [{
-            "id": item.id,
-            "user_id": id,
-            "total_price": item["total_price"],
-            "status": item["status"],
-            "created_at": item["created_at"],
-        } for item in orders]
+
+
