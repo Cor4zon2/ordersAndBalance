@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from typing import List
+from enum import Enum
 
 
 def create_order(order):
@@ -53,4 +55,29 @@ class ProductEntity:
     name: str
     price: int
 
+@dataclass
+class OrderProduct:
+    id: int
+    product: ProductEntity
+    price_freezed: int
+    quantity: int
 
+class OrderStatus(Enum):
+    PENDING = 'PENDING'
+    PAID = 'PAID'
+    CANCELED = 'CANCELED'
+    
+
+@dataclass
+class OrderEntity:
+    id: int
+    user_id: int
+    total_price: int
+    created_at: str
+    status: OrderStatus
+    items: List[OrderProduct]
+
+
+@dataclass
+class PaymentEntity:
+    id: int

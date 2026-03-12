@@ -31,8 +31,10 @@ def get_payments_list(user_id: int, last_id: int):
     pass
 
 
-def parse_items(items):
-    return {}
+
+
+
+
 
 @dataclass
 class OrderProductDTO:

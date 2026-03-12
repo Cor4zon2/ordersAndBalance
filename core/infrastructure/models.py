@@ -8,8 +8,8 @@ class Status(models.TextChoices):
         CANCELED = 'CANCELED', 'Отменен'
 
 class User(models.Model):
-    name = models.CharField(max_length=200)
-    email = models.EmailField(max_length=200)
+    name = models.CharField("Имя пользователя", max_length=200)
+    email = models.EmailField("Email пользователя", max_length=200)
 
     def __str__(self):
         return f"{self.name}"
@@ -36,7 +36,11 @@ class Product(models.Model):
 
 class OrderProducts(models.Model):
     product = models.ForeignKey(Product, on_delete = models.CASCADE, default=1)
-    order = models.ForeignKey(Order, on_delete = models.CASCADE, default=1)
+    order = models.ForeignKey(
+        Order, 
+        on_delete = models.CASCADE, 
+        related_name="items",
+        default=1,)
     quantity = models.IntegerField(default=1)
     product_price_freezed = models.IntegerField(default=1)
     
@@ -79,3 +83,11 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Оплата заказа {self.order} от {self.created_at} со статусом {self.status}"
+
+
+
+
+# tests
+class Fruit(models.Model):
+    name = models.CharField(max_length=100, primary_key = True)
+

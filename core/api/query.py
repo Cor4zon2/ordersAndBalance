@@ -4,6 +4,7 @@ from ariadne.asgi import GraphQL
 from core.infrastructure.models import Order, Refund
 from core.infrastructure.repositories.product_repository import DjangoProductRepository 
 from core.infrastructure.repositories.user_repository import DjangoUserRepository
+from core.infrastructure.repositories.order_repository import DjangoOrderRepository
 from core.domain.domain import create_order, get_products_list, get_user
 
 from datetime import datetime
