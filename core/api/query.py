@@ -191,7 +191,6 @@ type_defs = gql("""
 
 import logging
 logger = logging.getLogger(__name__)
-# logger.error("Это должно быть видно везде!")
 
 @mutation.field("createOrder")
 def resolve_create_order(obj, info, inputs):
