@@ -148,20 +148,28 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-    "json_formatter": {
-        "()": structlog.stdlib.ProcessorFormatter,
-        "processor": structlog.processors.JSONRenderer(),
-        "foreign_pre_chain": [
-            structlog.contextvars.merge_contextvars,
-            structlog.processors.add_log_level,
-            structlog.processors.TimeStamper(fmt="iso"),
-        ],
-    },
+        "json_formatter": {
+            "()": structlog.stdlib.ProcessorFormatter,
+            "processor": structlog.processors.JSONRenderer(),
+            "foreign_pre_chain": [
+                structlog.contextvars.merge_contextvars,
+                structlog.processors.add_log_level,
+                structlog.processors.TimeStamper(fmt="iso"),
+            ],
+        
+        },
+    "sql_formatter": {
+            "format": "[SQL] %(message)s",
+        },
 },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "json_formatter",
+        },
+        "sql_console": {
+            "class": "logging.StreamHandler",
+            "formatter": "sql_formatter",
         },
     },
     "loggers": {
@@ -169,11 +177,16 @@ LOGGING = {
             "handlers": ["console"],
             "level": "INFO",
         },
-        # Наш логгер для приложения
+        "django.db.backends": {
+            "handlers": ["sql_console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
         "": {
             "handlers": ["console"],
             "level": "DEBUG",
         },
+        
     },
 }
 
