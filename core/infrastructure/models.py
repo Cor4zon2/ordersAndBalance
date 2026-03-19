@@ -4,10 +4,10 @@ import uuid
 
 
 
-class Status(models.TextChoices):
-        PENDING = 'PENDING', 'Ожидает оплаты'
-        PAID = 'PAID', 'Оплачен'
-        CANCELED = 'CANCELED', 'Отменен'
+class Status(models.IntegerChoices):
+        PENDING = 1, 'Ожидает оплаты'
+        PAID = 2, 'Оплачен'
+        CANCELED = 3, 'Отменен'
 
 class TimestampMixin(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
@@ -34,7 +34,7 @@ class User(models.Model):
 class Order(TimestampMixin, IdempotencyMixin):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
     total_price = models.IntegerField(default=0, verbose_name="Цена")
-    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING, verbose_name="Статус")
+    status = models.IntegerField(choices=Status.choices, default=Status.PENDING, verbose_name="Статус")
 
     def __str__(self):
         return f"Заказ {self.id} от {self.user}"
@@ -73,7 +73,7 @@ class Wallet(models.Model):
 
 class IdempotencyRecords(TimestampMixin, IdempotencyMixin):
     namespace = models.CharField(max_length=200)
-    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    status = models.IntegerField(choices=Status.choices, default=Status.PENDING)
 
 
 class Refund(TimestampMixin, IdempotencyMixin):
@@ -87,7 +87,7 @@ class Refund(TimestampMixin, IdempotencyMixin):
 class Payment(TimestampMixin, IdempotencyMixin):
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, verbose_name="Кошелек пользователя")
     order = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name="Заказ")
-    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING, verbose_name="Статус платежа")
+    status = models.IntegerField(choices=Status.choices, default=Status.PENDING, verbose_name="Статус платежа")
     price = models.IntegerField("Сумма платежа")
 
     def __str__(self):
