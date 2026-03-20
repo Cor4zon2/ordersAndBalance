@@ -1,5 +1,5 @@
 from core.domain.interfaces import IOrderRepository
-from core.infrastructure.models import Order
+from core.infrastructure.models import Order, Status
 from core.domain.entities import OrderProductEntity, OrderEntity, ProductEntity
 
 from typing import Optional, List
@@ -11,15 +11,20 @@ class DjangoOrderRepository(IOrderRepository):
             id=order.id,
             user_id=order.user.id,
             total_price=order.total_price,
-            status=order.status,
+            status=Status(order.status).name,
             # это ошибка. Но запрос не используется в схеме. Пока пропущу
             items=[]
         )
         
 
 
-    def get_all(self) -> List[OrderEntity]:
-        orders = Order.objects.prefetch_related("items__product").all()
+    def get_all(self, user_id, order_status, last_id, limit) -> List[OrderEntity]:
+        orders = Order.objects.prefetch_related("items__product").filter(user_id=user_id, id__gt=last_id)
+
+        if order_status:
+            orders = orders.filter(status=Status[order_status])
+
+        orders = orders.order_by("id")[:limit]
         
         result = []
 
@@ -46,7 +51,7 @@ class DjangoOrderRepository(IOrderRepository):
                 idempotency_key=order.idempotency_key,
                 total_price=order.total_price,
                 created_at=order.created_at,
-                status=order.status,
+                status=Status(order.status).name,
                 items=order_items,
             ))
 

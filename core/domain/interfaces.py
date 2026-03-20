@@ -27,7 +27,7 @@ class IOrderRepository(ABC):
         pass
 
     @abstractmethod
-    def get_all(self) -> List[OrderEntity]:
+    def get_all(self, user_id: int, order_status, last_id: int, limit: int) -> List[OrderEntity]:
         pass
 
 

@@ -6,7 +6,7 @@ from core.infrastructure.repositories.product_repository import DjangoProductRep
 from core.infrastructure.repositories.user_repository import DjangoUserRepository
 from core.infrastructure.repositories.order_repository import DjangoOrderRepository
 from core.infrastructure.repositories.payment_repository import DjangoPaymentRepository
-from core.domain.domain import create_order, get_products_list, get_user, create_payment
+from core.domain.domain import create_order, get_products_list, get_user, create_payment, get_orders_list
 
 from datetime import datetime
 
@@ -156,11 +156,13 @@ type_defs = gql("""
     input GetOrderListInputs {
         userId: ID!
         lastId: ID
+        limit: Int
         orderStatus: OrderStatus
     }
 
     type GetOrdersListResult {
         orders: [Order!]!
+        lastId: ID
     }
 
     input GetProductListInputs {
@@ -262,14 +264,18 @@ def resolve_get_user(obj, info, input):
 
 @query.field("getOrdersList")
 def resolve_get_orders_list(obj, info, input):
-    id = input["userId"]
-    last_id = input.get("lastId")
+    user_id = input["userId"]
+    last_id = input.get("lastId", 0)
+    limit = input.get("limit", 10)
     order_status = input.get("orderStatus")
 
     orders_repo = DjangoOrderRepository()
-    # todo: тут ошибка
-    orders = orders_repo.get_all()
-    return {"orders": orders}    
+    
+    orders = get_orders_list(orders_repo, user_id, last_id, limit, order_status)
+    return {
+        "orders": orders,
+        "last_id": orders[-1]["id"] if orders else None
+        }    
 
 
 
