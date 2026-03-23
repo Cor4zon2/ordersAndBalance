@@ -173,21 +173,10 @@ type_defs = gql("""
         products: [Product!]!
     }
 
-    input GetPaymentsListInput {
-        userId: ID!
-        lastId: ID
-    }
-
-    type GetPaymentListResult {
-        payments: [Payment!]!
-        lastId: ID!
-    }
-
     type Query {
         getUser(input: GetUserInputs): GetUserResult!
         getOrdersList(input: GetOrderListInputs!): GetOrdersListResult!
         getProductList(input: GetProductListInputs!): GetProductListResult!
-        getPaymentsList(input: GetPaymentsListInput!): GetPaymentListResult!
     }
 """)
 
@@ -285,6 +274,8 @@ def resolve_get_products_list(obj, info, input):
     product_repo = DjangoProductRepository()
     products = get_products_list(product_repo, lastId)
     return { "products": products }
+
+
 
 schema = make_executable_schema(type_defs, query, mutation, snake_case_fallback_resolvers, get_user_result, create_payment_result)
 app = GraphQL(schema, debug=True)
