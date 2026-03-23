@@ -17,7 +17,7 @@ class TimestampMixin(models.Model):
 
 
 class IdempotencyMixin(models.Model):
-    idempotency_key = models.CharField(max_length=100, unique=True, default=uuid.uuid4, editable=False)
+    idempotency_key = models.CharField(max_length=100, editable=False)
 
     class Meta:
         abstract = True
@@ -38,6 +38,14 @@ class Order(TimestampMixin, IdempotencyMixin):
 
     def __str__(self):
         return f"Заказ {self.id} от {self.user}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "idempotency_key"],
+                name="unique_idempotency_per_user",
+            )
+        ]
 
 
 class Product(models.Model):
@@ -75,6 +83,14 @@ class IdempotencyRecords(TimestampMixin, IdempotencyMixin):
     namespace = models.CharField(max_length=200)
     status = models.IntegerField(choices=Status.choices, default=Status.PENDING)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["namespace", "idempotency_key"],
+                name="unique_idempotency_key_per_namespace"
+            )
+        ]
+
 
 class Refund(TimestampMixin, IdempotencyMixin):
     order = models.OneToOneField(Order, on_delete=models.CASCADE)
@@ -83,6 +99,13 @@ class Refund(TimestampMixin, IdempotencyMixin):
     def __str__(self):
         return f"Заказ {self.order} был вовращен {self.created_at} по причине: {self.reason}"
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["idempotency_key"],
+                name="unique_idempotency_key_per_order"
+            )
+        ]
 
 class Payment(TimestampMixin, IdempotencyMixin):
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, verbose_name="Кошелек пользователя")
@@ -93,4 +116,10 @@ class Payment(TimestampMixin, IdempotencyMixin):
     def __str__(self):
         return f"Оплата заказа {self.order} от {self.created_at} со статусом {self.status}"
 
-
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["idempotency_key"],
+                name="unique_idempotency_key_per_payment",
+            )
+        ]
