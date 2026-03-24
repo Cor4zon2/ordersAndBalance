@@ -9,7 +9,40 @@ from core.infrastructure.repositories.payment_repository import DjangoPaymentRep
 from core.domain.domain import create_order, get_products_list, get_user, create_payment, get_orders_list
 from core.domain.exceptions import InsufficientFundsError, OrderNotFoundError
 
+from dataclasses import dataclass
 from datetime import datetime
+
+
+@dataclass
+class SuccessOrderCreation:
+    success: bool = True
+
+
+@dataclass
+class SuccessPaymentCreation:
+    success: bool = True
+
+
+@dataclass
+class SuccessRefundCreation:
+    success: bool = True
+
+
+@dataclass
+class SuccessfullyGetUser:
+    user: dict = None
+
+
+@dataclass
+class ErrorUnknown:
+    title: str = ""
+    message: str = ""
+
+
+@dataclass
+class ErrorAuth:
+    title: str = ""
+    message: str = ""
 
 query = QueryType()
 mutation = MutationType()
@@ -189,7 +222,7 @@ create_order_results = UnionType("CreateOrderResults")
 #todo: тут нужно найти как обрабатывать разные ошибки
 @create_order_results.type_resolver
 def resolve_create_order_result(obj, *_):
-    if "success" in obj:
+    if isinstance(obj, SuccessOrderCreation):
         return "SuccessOrderCreation"
     return "ErrorUnknown"
 
@@ -200,17 +233,17 @@ def resolve_create_order(obj, info, input):
     idempotency_key = input["idempotencyKey"]
 
     if not idempotency_key.strip():
-        return {
-            "title": "Idempotency Key is required",
-            "message": "Idempotency Key is required"
-        }
+        return ErrorUnknown(
+            title="Idempotency Key is required",
+            message="Idempotency Key is required"
+        )
 
     # todo: принять решение к какому слою это относится api или domain
     if not items:
-        return {
-            "title": "Items are required",
-            "message": "Items are required"
-        }
+        return ErrorUnknown(
+            title="Items are required",
+            message="Items are required"
+        )
 
     order = {
         "userId": userId,
@@ -226,7 +259,7 @@ create_payment_result = UnionType("CreatePaymentResult")
 
 @create_payment_result.type_resolver
 def resolve_create_payment_result(obj, *_):
-    if ("success" in obj):
+    if isinstance(obj, SuccessPaymentCreation):
         return "SuccessPaymentCreation"
     return "ErrorUnknown"
 
@@ -238,29 +271,27 @@ def resolve_create_payment(obj, info, input):
     wallet_id = input["walletId"]
 
     if not idempotency_key.strip():
-        return {
-            "title": "Idempotency Key is required",
-            "message": "Idempotency Key is required"
-        }
+        return ErrorUnknown(
+            title="Idempotency Key is required",
+            message="Idempotency Key is required"
+        )
 
     payment_repo = DjangoPaymentRepository()
 
-    try: 
+    try:
         result = create_payment(payment_repo, idempotency_key, order_id, wallet_id)
     except InsufficientFundsError:
-        return {
-            "title": "Insufficient balance",
-            "message": "Insufficient balance"
-        }
+        return ErrorUnknown(
+            title="Insufficient balance",
+            message="Insufficient balance"
+        )
     except OrderNotFoundError:
-        return {
-            "title": "order or wallet not found",
-            "message": "order or wallet not found"
-        }
+        return ErrorUnknown(
+            title="order or wallet not found",
+            message="order or wallet not found"
+        )
 
-    return {
-        "success": True
-    }
+    return SuccessPaymentCreation()
     
 
 @mutation.field("createRefund")
@@ -273,7 +304,7 @@ get_user_result = UnionType("GetUserResult")
 
 @get_user_result.type_resolver
 def resolve_get_user_result_type(obj, *_):
-    if ("user" in obj):
+    if isinstance(obj, SuccessfullyGetUser):
         return "SuccessfullyGetUser"
     return "ErrorAuth"
 
@@ -284,7 +315,7 @@ def resolve_get_user(obj, info, input):
 
     user = get_user(user_repo, user_id)
 
-    return {"user": user}
+    return SuccessfullyGetUser(user=user)
 
 
 @query.field("getOrdersList")

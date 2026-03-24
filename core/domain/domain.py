@@ -33,10 +33,6 @@ def get_payments_list(user_id: int, last_id: int):
 
 
 
-
-
-
-
 @dataclass
 class OrderProductDTO:
     productId: int
