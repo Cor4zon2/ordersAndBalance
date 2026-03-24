@@ -183,10 +183,33 @@ type_defs = gql("""
 import logging
 logger = logging.getLogger(__name__)
 
+create_order_results = UnionType("CreateOrderResults")
+
+#todo: тут нужно найти как обрабатывать разные ошибки
+@create_order_results.type_resolver
+def resolve_create_order_result(obj, *_):
+    if "success" in obj:
+        return "SuccessOrderCreation"
+    return "ErrorUnknown"
+
 @mutation.field("createOrder")
-def resolve_create_order(obj, info, inputs):
-    items = inputs["items"]
-    userId = inputs["userId"]
+def resolve_create_order(obj, info, input):
+    items = input["items"]
+    userId = input["userId"]
+    idempotency_key = input["idempotencyKey"]
+
+    if not idempotency_key.strip():
+        return {
+            "title": "Idempotency Key is required",
+            "message": "Idempotency Key is required"
+        }
+
+    # todo: принять решение к какому слою это относится api или domain
+    if not items:
+        return {
+            "title": "Items are required",
+            "message": "Items are required"
+        }
 
     order = {
         "userId": userId,
@@ -213,6 +236,13 @@ def resolve_create_payment(obj, info, input):
     order_id = input["orderId"]
     wallet_id = input["walletId"]
 
+    if not idempotency_key.strip():
+        return {
+            "title": "Idempotency Key is required",
+            "message": "Idempotency Key is required"
+        }
+
+
     payment_repo = DjangoPaymentRepository()
     result = create_payment(payment_repo, idempotency_key, order_id, wallet_id)
 
@@ -232,6 +262,12 @@ def resolve_create_payment(obj, info, input):
         "success": True
     }
     
+
+@mutation.field("createRefund")
+def resolve_create_refund(obj, info, input):
+    pass
+
+
 
 get_user_result = UnionType("GetUserResult")
 
@@ -277,5 +313,13 @@ def resolve_get_products_list(obj, info, input):
 
 
 
-schema = make_executable_schema(type_defs, query, mutation, snake_case_fallback_resolvers, get_user_result, create_payment_result)
+schema = make_executable_schema(
+    type_defs,
+    query,
+    mutation,
+    snake_case_fallback_resolvers,
+    get_user_result,
+    create_payment_result,
+    create_order_results,
+)
 app = GraphQL(schema, debug=True)
