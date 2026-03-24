@@ -7,6 +7,7 @@ from core.infrastructure.repositories.user_repository import DjangoUserRepositor
 from core.infrastructure.repositories.order_repository import DjangoOrderRepository
 from core.infrastructure.repositories.payment_repository import DjangoPaymentRepository
 from core.domain.domain import create_order, get_products_list, get_user, create_payment, get_orders_list
+from core.domain.exceptions import InsufficientFundsError, OrderNotFoundError
 
 from datetime import datetime
 
@@ -242,20 +243,19 @@ def resolve_create_payment(obj, info, input):
             "message": "Idempotency Key is required"
         }
 
-
     payment_repo = DjangoPaymentRepository()
-    result = create_payment(payment_repo, idempotency_key, order_id, wallet_id)
 
-    if result == "ERROR_NOT_FOUND":
+    try: 
+        result = create_payment(payment_repo, idempotency_key, order_id, wallet_id)
+    except InsufficientFundsError:
         return {
-        "title": "order or wallet not found",
-        "message": "order or wallet not found"
+            "title": "Insufficient balance",
+            "message": "Insufficient balance"
         }
-
-    if result == "ERROR_INSUFFICIENT_FUNDS":
+    except OrderNotFoundError:
         return {
-        "title": "Insufficient balance",
-        "message": "Insufficient balance"
+            "title": "order or wallet not found",
+            "message": "order or wallet not found"
         }
 
     return {

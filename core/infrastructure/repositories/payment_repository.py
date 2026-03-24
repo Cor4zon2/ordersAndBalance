@@ -1,5 +1,7 @@
 from core.infrastructure.models import Payment, Order, Wallet
 from core.domain.interfaces import IPaymentRepository
+from core.domain.exceptions import InsufficientFundsError, OrderNotFoundError
+
 import structlog
 from django.db import transaction
 
@@ -14,10 +16,10 @@ class DjangoPaymentRepository(IPaymentRepository):
 
             if order_price is None or balance is None:
                 logger.error("create_payment", order_id=order_id, wallet_id=wallet_id)
-                return "ERROR_NOT_FOUND"
+                raise OrderNotFoundError()
 
             if (order_price > balance):
                 logger.error("create_payment", order_id=order_id, wallet_id=wallet_id)
-                return "ERROR_INSUFFICIENT_FUNDS"
+                raise InsufficientFundsError()
 
             return Payment.objects.create(idempotency_key=idempotency_key, order_id=order_id, wallet_id=wallet_id, price=order_price)
