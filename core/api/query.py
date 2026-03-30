@@ -185,7 +185,7 @@ type_defs = gql("""
         message: String!
     }
 
-    union GetUserResult = SuccessfullyGetUser | ErrorAuth
+    union GetUserResult = SuccessfullyGetUser | ErrorAuth | ErrorUnknown
 
     input GetOrderListInputs {
         userId: ID!
@@ -208,7 +208,7 @@ type_defs = gql("""
     }
 
     type Query {
-        getUser(input: GetUserInputs): GetUserResult!
+        getUser(input: GetUserInputs!): GetUserResult!
         getOrdersList(input: GetOrderListInputs!): GetOrdersListResult!
         getProductList(input: GetProductListInputs!): GetProductListResult!
     }
@@ -313,7 +313,13 @@ def resolve_get_user(obj, info, input):
     user_id = input["userId"]
     user_repo = DjangoUserRepository()
 
-    user = get_user(user_repo, user_id)
+    try:
+        user = get_user(user_repo, user_id)
+    except Exception:
+        return ErrorUnknown(
+            title="Error unknown",
+            message="please, check user repository"
+        )
 
     return SuccessfullyGetUser(user=user)
 
@@ -321,7 +327,7 @@ def resolve_get_user(obj, info, input):
 @query.field("getOrdersList")
 def resolve_get_orders_list(obj, info, input):
     user_id = input["userId"]
-    last_id = input.get("lastId", 0)
+    last_id = input.get("lastId", 0) 
     limit = input.get("limit", 10)
     order_status = input.get("orderStatus")
 
@@ -337,9 +343,10 @@ def resolve_get_orders_list(obj, info, input):
 
 @query.field("getProductList")
 def resolve_get_products_list(obj, info, input):
-    lastId = input["lastId"]
+    lastId = input.get("lastId", 0)
     product_repo = DjangoProductRepository()
-    products = get_products_list(product_repo, lastId)
+    limit = 10
+    products = get_products_list(product_repo, lastId, limit)
     return { "products": products }
 
 

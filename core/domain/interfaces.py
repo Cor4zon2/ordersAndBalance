@@ -10,7 +10,7 @@ class IProductRepository(ABC):
         pass
 
     @abstractmethod
-    def get_all(self) -> List[ProductEntity]:
+    def get_all(self, last_id: int, limit: int) -> List[ProductEntity]:
         pass
 
 

@@ -10,6 +10,7 @@ class DjangoProductRepository(IProductRepository):
 
 
     def get_all(self) -> Dict[int, dict]:
+        # todo: https://docs.djangoproject.com/en/6.0/topics/db/queries/
         products = Product.objects.values("id", "name", "price")
         return {item["id"] : {
             "name": item["name"],
