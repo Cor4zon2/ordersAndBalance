@@ -1,6 +1,7 @@
 from core.domain.interfaces import IOrderRepository
 from core.infrastructure.models import Order, Status
 from core.domain.entities import OrderProductEntity, OrderEntity, ProductEntity
+from core.domain.value_objects import OrderProduct
 
 from typing import Optional, List
 
@@ -58,5 +59,6 @@ class DjangoOrderRepository(IOrderRepository):
         return result
 
 
-
+    def create_order(self, user_id: int, idempotency_key: str, items: List[OrderProduct]):
+        pass
 

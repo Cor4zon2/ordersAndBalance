@@ -2,6 +2,7 @@ from dataclasses import dataclass, asdict
 from typing import List
 
 from core.domain.interfaces import IProductRepository, IUserRepository, IOrderRepository, IPaymentRepository
+from core.domain.value_objects import OrderProduct
 
 
 
@@ -28,19 +29,17 @@ def get_products_list(product_repo: IProductRepository, last_id: int, limit: int
 def get_payments_list(user_id: int, last_id: int):
     pass
 
-@dataclass
-class OrderProductDTO:
-    productId: int
-    quantity: int
 
 
 
 
+def create_order(orders_repo: IOrderRepository, user_id: int, idempotency_key: str, items: List[OrderProduct]):
+    new_order = orders_repo.create_order(user_id, idempotency_key, items)
+    return new_order
 
 
-# Mutations
-def create_order(user_id: int, idempotency_key: str, products: List[OrderProductDTO]):
-    pass
+
+
 
 def create_refund(order_id: int, user_id: int, reason: str, idempotency_key: str):
     pass

@@ -231,6 +231,7 @@ def resolve_create_order(obj, info, input):
     items = input["items"]
     userId = input["userId"]
     idempotency_key = input["idempotencyKey"]
+    orders_repo = DjangoOrderRepository()
 
     if not idempotency_key.strip():
         return ErrorUnknown(
@@ -245,13 +246,15 @@ def resolve_create_order(obj, info, input):
             message="Items are required"
         )
 
-    order = {
-        "userId": userId,
-        "items": items,
-    }
-    new_order = create_order(order)
+    try:
+        new_order = create_order(orders_repo, userId, idempotency_key, items)
+    except Exception:
+        return ErrorUnknown(
+            title="Error with order creation",
+            message="sorry."
+        )
 
-    return new_order
+    return SuccessOrderCreation()
 
 
 create_payment_result = UnionType("CreatePaymentResult")
