@@ -57,7 +57,7 @@ class Product(models.Model):
 
 
 class OrderProducts(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="Продукт")
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, verbose_name="Продукт", null=True)
     order = models.ForeignKey(
         Order, 
         on_delete = models.CASCADE, 
@@ -92,7 +92,7 @@ class IdempotencyRecords(TimestampMixin, IdempotencyMixin):
 
 
 class Refund(TimestampMixin, IdempotencyMixin):
-    order = models.OneToOneField(Order, on_delete=models.CASCADE)
+    order = models.OneToOneField(Order, on_delete=models.PROTECT)
     reason = models.CharField(max_length=200)
 
     def __str__(self):
@@ -107,8 +107,8 @@ class Refund(TimestampMixin, IdempotencyMixin):
         ]
 
 class Payment(TimestampMixin, IdempotencyMixin):
-    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, verbose_name="Кошелек пользователя")
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name="Заказ")
+    wallet = models.ForeignKey(Wallet, on_delete=models.PROTECT, verbose_name="Кошелек пользователя")
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, verbose_name="Заказ")
     status = models.IntegerField(choices=Status.choices, default=Status.PENDING, verbose_name="Статус платежа")
     price = models.IntegerField("Сумма платежа")
 
