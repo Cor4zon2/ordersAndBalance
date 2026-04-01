@@ -1,8 +1,4 @@
 from django.db import models
-import uuid
-
-
-
 
 class Status(models.IntegerChoices):
         PENDING = 1, 'Ожидает оплаты'
@@ -33,7 +29,7 @@ class User(models.Model):
 
 class Order(TimestampMixin, IdempotencyMixin):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
-    total_price = models.IntegerField(verbose_name="Цена")
+    total_price = models.PositiveIntegerField(verbose_name="Цена")
     status = models.IntegerField(choices=Status.choices, default=Status.PENDING, verbose_name="Статус")
 
     def __str__(self):
@@ -50,7 +46,7 @@ class Order(TimestampMixin, IdempotencyMixin):
 
 class Product(models.Model):
     name = models.CharField(max_length=300)
-    price = models.IntegerField()
+    price = models.PositiveIntegerField()
 
     def __str__(self):
         return f"{self.name}"
@@ -64,8 +60,8 @@ class OrderProducts(models.Model):
         related_name="order_products",
         verbose_name="Заказ",
         )
-    quantity = models.IntegerField("Количество")
-    product_price_freezed = models.IntegerField("Фиксированная цена заказа")
+    quantity = models.PositiveIntegerField("Количество")
+    product_price_freezed = models.PositiveIntegerField("Фиксированная цена заказа")
     
     def __str__(self):
         return f"Цена {self.id}: {self.product_price_freezed}"
@@ -73,7 +69,7 @@ class OrderProducts(models.Model):
 
 class Wallet(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Пользователь")
-    balance = models.IntegerField("Баланс кошелька")
+    balance = models.PositiveIntegerField("Баланс кошелька")
 
     def __str__(self):
         return f"Пользователь {self.user} имеет {self.balance} на счету"
@@ -110,7 +106,7 @@ class Payment(TimestampMixin, IdempotencyMixin):
     wallet = models.ForeignKey(Wallet, on_delete=models.PROTECT, verbose_name="Кошелек пользователя")
     order = models.ForeignKey(Order, on_delete=models.PROTECT, verbose_name="Заказ")
     status = models.IntegerField(choices=Status.choices, default=Status.PENDING, verbose_name="Статус платежа")
-    price = models.IntegerField("Сумма платежа")
+    price = models.PositiveIntegerField("Сумма платежа")
 
     def __str__(self):
         return f"Оплата заказа {self.order} от {self.created_at} со статусом {self.status}"
