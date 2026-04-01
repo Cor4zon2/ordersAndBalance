@@ -21,7 +21,7 @@ class DjangoOrderRepository(IOrderRepository):
 
 
     def get_all(self, user_id, order_status, last_id, limit) -> List[OrderEntity]:
-        orders = Order.objects.prefetch_related("items__product").filter(user_id=user_id, id__gt=last_id)
+        orders = Order.objects.prefetch_related("order_products__product").filter(user_id=user_id, id__gt=last_id)
 
         if order_status:
             orders = orders.filter(status=Status[order_status])
@@ -33,7 +33,7 @@ class DjangoOrderRepository(IOrderRepository):
         for order in orders:
             order_items = []
 
-            for item in order.items.all():
+            for item in order.order_products.all():
                 entity = OrderProductEntity(
                     id=item.id,
                     product=ProductEntity(

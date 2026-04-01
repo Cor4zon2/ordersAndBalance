@@ -33,7 +33,7 @@ class User(models.Model):
 
 class Order(TimestampMixin, IdempotencyMixin):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
-    total_price = models.IntegerField(default=0, verbose_name="Цена")
+    total_price = models.IntegerField(verbose_name="Цена")
     status = models.IntegerField(choices=Status.choices, default=Status.PENDING, verbose_name="Статус")
 
     def __str__(self):
@@ -57,16 +57,15 @@ class Product(models.Model):
 
 
 class OrderProducts(models.Model):
-    product = models.ForeignKey(Product, on_delete = models.CASCADE, default=1, verbose_name="Продукт")
+    product = models.ForeignKey(Product, on_delete = models.CASCADE, verbose_name="Продукт")
     order = models.ForeignKey(
         Order, 
         on_delete = models.CASCADE, 
-        related_name="items",
-        default=1,
+        related_name="order_products",
         verbose_name="Заказ",
         )
-    quantity = models.IntegerField("Количество", default=1)
-    product_price_freezed = models.IntegerField("Фиксированная цена заказа", default=1)
+    quantity = models.IntegerField("Количество")
+    product_price_freezed = models.IntegerField("Фиксированная цена заказа")
     
     def __str__(self):
         return f"Цена {self.id}: {self.product_price_freezed}"
