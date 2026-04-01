@@ -1,7 +1,8 @@
 from core.domain.interfaces import IOrderRepository
-from core.infrastructure.models import Order, Status
+from core.infrastructure.models import Order, Status, IdempotencyRecords, OrderProducts, Product
 from core.domain.entities import OrderProductEntity, OrderEntity, ProductEntity
 from core.domain.value_objects import OrderProduct
+from django.db import transaction
 
 from typing import Optional, List
 
@@ -60,5 +61,33 @@ class DjangoOrderRepository(IOrderRepository):
 
 
     def create_order(self, user_id: int, idempotency_key: str, items: List[OrderProduct]):
-        pass
+        
+        with transaction.atomic():            
+            exists = IdempotencyRecords.objects.select_for_update().filter(idempotency_key=idempotency_key).exists()
+            if exists:
+                return
+            IdempotencyRecords.objects.create(idempotency_key=idempotency_key, namespace="order")
+                
+            
+            total_price = 0
 
+            new_order = Order.objects.create(user_id=user_id, idempotency_key=idempotency_key, total_price=total_price)
+
+            for item in items:
+                order_id = new_order.id
+                product_price = Product.objects.filter(id=item["productId"]).values_list("price", flat=True).first()
+                total_price = total_price + product_price
+
+                OrderProducts.objects.create(
+                    product_id=item["productId"],
+                    order_id=order_id,
+                    quantity=item["quantity"],
+                    product_price_freezed=product_price,
+                )
+
+            new_order.total_price = total_price
+            new_order.save(update_fields=["total_price"])
+
+            
+
+        
